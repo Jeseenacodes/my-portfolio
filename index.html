@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jeseena Parveen — Data Analyst</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c18;
+    --surface: #0d1225;
+    --border: #1a2040;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dim: #7a6030;
+    --text: #e8e4d8;
+    --muted: #6e7a9a;
+    --card: #0b0f20;
+    --navy: #111827;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Cursor */
+  .cursor {
+    width: 8px; height: 8px;
+    background: var(--gold);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s;
+  }
+  .cursor-ring {
+    width: 32px; height: 32px;
+    border: 1px solid rgba(201,168,76,0.4);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.18s ease-out, width 0.3s, height 0.3s;
+  }
+  .cursor.hovered { width: 16px; height: 16px; }
+  .cursor-ring.hovered { width: 48px; height: 48px; }
+
+  /* Starfield */
+  canvas#stars {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  /* Gold shimmer line across top */
+  .shimmer-line {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), var(--gold-light), var(--gold), transparent);
+    z-index: 600;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 500;
+    padding: 28px 72px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(8, 12, 24, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(201, 168, 76, 0.06);
+    transition: background 0.3s;
+  }
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.12em;
+    text-decoration: none;
+ 
+  }
+  .nav-links {
+    display: flex;
+    gap: 44px;
+    list-style: none;
+  }
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 400;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--gold-light); }
+
+  /* Hamburger button */
+  .nav-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    z-index: 600;
+  }
+  .nav-toggle span {
+    display: block;
+    width: 100%;
+    height: 1px;
+    background: var(--gold);
+    transition: transform 0.3s, opacity 0.3s;
+    transform-origin: center;
+  }
+  .nav-toggle.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .nav-toggle.open span:nth-child(2) { opacity: 0; }
+  .nav-toggle.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+  /* Mobile menu overlay */
+  .mobile-menu {
+    position: fixed;
+    inset: 0;
+    z-index: 490;
+    background: rgba(8, 12, 24, 0.97);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s;
+    display: none;
+  }
+  .mobile-menu.open {
+    display: flex;
+    opacity: 1;
+    pointer-events: all;
+  }
+  .mobile-menu a {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.4rem;
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+    transition: color 0.3s;
+  }
+  .mobile-menu a:hover { color: var(--gold); }
+
+  section { position: relative; z-index: 1; scroll-margin-top: 80px; }
+
+  /* HERO */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 140px 72px 100px;
+    overflow: hidden;
+  }
+
+  .hero-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: fadeUp 1s 0.2s forwards;
+  }
+  .eyebrow-line {
+    width: 48px; height: 1px;
+    background: var(--gold);
+  }
+  .eyebrow-text {
+    font-size: 0.68rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  .hero-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(4rem, 11vw, 9.5rem);
+    font-weight: 600;
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+    opacity: 0;
+    animation: fadeUp 1s 0.4s forwards;
+  }
+  .hero-name .line1 { color: var(--text); }
+  .hero-name .line2 {
+    color: transparent;
+    -webkit-text-stroke: 1px var(--gold-dim);
+    font-style: italic;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+    font-style: italic;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    margin-bottom: 36px;
+    opacity: 0;
+    animation: fadeUp 1s 0.6s forwards;
+  }
+
+  .hero-desc {
+    max-width: 520px;
+    font-size: 0.88rem;
+    line-height: 2;
+    color: var(--muted);
+    margin-bottom: 52px;
+    opacity: 0;
+    animation: fadeUp 1s 0.8s forwards;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    opacity: 0;
+    animation: fadeUp 1s 1s forwards;
+  }
+
+  .btn-gold {
+    padding: 16px 40px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--bg);
+    font-family: 'Jost', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: none;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-gold::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: white;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .btn-gold:hover::after { opacity: 0.1; }
+  .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(201,168,76,0.3); }
+
+  .btn-ghost {
+    padding: 15px 40px;
+    border: 1px solid var(--gold-dim);
+    color: var(--text);
+    font-family: 'Jost', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 400;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: none;
+    transition: all 0.3s;
+  }
+  .btn-ghost:hover {
+    border-color: var(--gold);
+    color: var(--gold-light);
+    transform: translateY(-2px);
+  }
+
+  /* Ornamental divider */
+  .ornament {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 0 72px;
+    opacity: 0.4;
+  }
+  .ornament-line { flex: 1; height: 1px; background: var(--border); }
+  .ornament-diamond {
+    width: 6px; height: 6px;
+    background: var(--gold-dim);
+    transform: rotate(45deg);
+  }
+
+  /* STATS ROW */
+  .stats-row {
+    display: flex;
+    gap: 0;
+    margin: 0 72px;
+    border: 1px solid var(--border);
+    opacity: 0;
+    animation: fadeIn 1s 1.3s forwards;
+  }
+  .stat-box {
+    flex: 1;
+    padding: 36px 40px;
+    border-right: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-box:last-child { border-right: none; }
+  .stat-box::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    transform: scaleX(0);
+    transition: transform 0.5s;
+  }
+  .stat-box:hover::before { transform: scaleX(1); }
+  .stat-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem;
+    font-weight: 600;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* SECTION COMMONS */
+  .section-wrap {
+    padding: 120px 72px;
+    border-top: 1px solid var(--border);
+  }
+  .section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 60px;
+    margin-bottom: 72px;
+  }
+  .section-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 5rem;
+    font-weight: 400;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--border);
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: -8px;
+  }
+  .section-title-group {}
+  .section-eyebrow {
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.2rem, 4vw, 3.8rem);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+  .section-title em { font-style: italic; color: var(--gold); }
+
+  /* ABOUT */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+  .about-text {
+    font-size: 0.9rem;
+    line-height: 2.1;
+    color: var(--muted);
+  }
+  .about-text p + p { margin-top: 20px; }
+  .about-text strong { color: var(--text); font-weight: 400; }
+
+  .skills-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--border);
+  }
+  .skill-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    transition: background 0.3s, padding-left 0.3s;
+    cursor: default;
+  }
+  .skill-row:last-child { border-bottom: none; }
+  .skill-row:hover {
+    background: rgba(201,168,76,0.04);
+    padding-left: 32px;
+  }
+  .skill-row:hover .skill-name { color: var(--gold-light); }
+  .skill-name { color: var(--text); }
+  .skill-cat {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+  }
+
+  /* CERTS */
+  .certs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .cert-card {
+    border: 1px solid var(--border);
+    padding: 40px 36px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.4s, transform 0.3s;
+    background: var(--card);
+  }
+  .cert-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    transform: scaleX(0);
+    transition: transform 0.5s;
+  }
+  .cert-card:hover::before { transform: scaleX(1); }
+  .cert-card:hover { border-color: var(--gold-dim); transform: translateY(-6px); }
+  .cert-icon {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.5rem;
+    color: var(--gold-dim);
+    margin-bottom: 20px;
+    line-height: 1;
+    font-style: italic;
+  }
+  .cert-issuer {
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 10px;
+  }
+  .cert-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text);
+  }
+
+  .gold-link {
+  color: #d4af37;              /* Gold text */
+  text-decoration: underline;
+  text-decoration-color: #d4af37;  /* Gold underline */
+  text-underline-offset: 3px;  /* Adds spacing below text */
+  font-weight: normal;
+}
+
+.gold-link:hover {
+  opacity: 0.8;                /* Subtle hover effect */
+}
+
+  /* PROJECTS */
+  .projects-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--border);
+  }
+  .projects-table thead tr {
+    border-bottom: 1px solid var(--border);
+  }
+  .projects-table th {
+    padding: 14px 24px;
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-align: left;
+    font-weight: 400;
+    background: rgba(201,168,76,0.03);
+  }
+  .projects-table td {
+    padding: 28px 24px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    font-size: 0.82rem;
+    line-height: 1.7;
+  }
+  .projects-table tr:last-child td { border-bottom: none; }
+  .projects-table tbody tr {
+    transition: background 0.3s;
+    cursor: default;
+  }
+  .projects-table tbody tr:hover { background: rgba(201,168,76,0.03); }
+
+  .proj-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    color: var(--gold-dim);
+    font-style: italic;
+    white-space: nowrap;
+  }
+  .proj-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .proj-desc {
+    color: var(--muted);
+    font-size: 0.78rem;
+    line-height: 1.8;
+  }
+  .proj-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tag {
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid var(--gold-dim);
+    color: var(--gold-dim);
+    white-space: nowrap;
+  }
+  .proj-link {
+    color: var(--gold);
+    text-decoration: none;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    transition: color 0.2s;
+  }
+  .proj-link:hover { color: var(--gold-light); }
+
+  /* SQL PROFILE */
+  .sql-block {
+    background: #060910;
+    border: 1px solid var(--gold-dim);
+    padding: 36px 44px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    line-height: 2;
+    position: relative;
+    overflow: hidden;
+    max-width: 600px;
+  }
+  .sql-block::before {
+    content: 'profile.sql';
+    position: absolute;
+    top: 0; left: 0;
+    padding: 6px 16px;
+    background: var(--gold-dim);
+    color: var(--bg);
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .sql-block::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(201,168,76,0.04), transparent 60%);
+    pointer-events: none;
+  }
+  .sql-comment { color: #3a4060; }
+  .sql-keyword { color: var(--gold-light); font-weight: bold; }
+  .sql-string { color: #88c98a; }
+  .sql-key { color: var(--muted); min-width: 110px; display: inline-block; }
+  .sql-val { color: var(--text); }
+  .sql-status { color: var(--gold); }
+  .sql-cursor {
+    display: inline-block;
+    width: 7px; height: 13px;
+    background: var(--gold);
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+    margin-left: 2px;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* CORE COMPETENCIES */
+  .competencies-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .comp-item {
+    background: var(--card);
+    padding: 28px 28px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+  .comp-item::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 2px; height: 0;
+    background: var(--gold);
+    transition: height 0.4s;
+  }
+  .comp-item:hover { background: rgba(201,168,76,0.04); }
+  .comp-item:hover::before { height: 100%; }
+  .comp-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.7rem;
+    color: var(--gold-dim);
+    font-style: italic;
+    margin-bottom: 12px;
+    letter-spacing: 0.1em;
+  }
+  .comp-title {
+    font-size: 0.78rem;
+    line-height: 1.6;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+
+  /* FOOTER */
+  footer {
+    padding: 60px 72px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+  .footer-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-weight: 600;
+    font-style: italic;
+    color: var(--gold);
+  }
+  .footer-links {
+    display: flex;
+    gap: 32px;
+  }
+  .footer-links a {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--gold-light); }
+  .footer-copy {
+    font-size: 0.65rem;
+    color: var(--border);
+    letter-spacing: 0.1em;
+  }
+
+  /* available */
+  .avail-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--gold-dim);
+    padding: 9px 20px;
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 40px;
+    opacity: 0;
+    animation: fadeUp 1s 0.1s forwards;
+  }
+  .pulse-dot {
+    width: 5px; height: 5px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.9s, transform 0.9s;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 900px) {
+    nav { padding: 20px 24px; }
+    .nav-links { display: none; }
+    .nav-toggle { display: flex; }
+    #hero, .section-wrap { padding-left: 24px; padding-right: 24px; }
+    .ornament, .stats-row { margin-left: 24px; margin-right: 24px; }
+    .about-grid, .certs-grid { grid-template-columns: 1fr; }
+    .section-header { flex-direction: column; gap: 16px; }
+    .section-num { font-size: 3rem; }
+    .projects-table thead { display: none; }
+    .projects-table td { display: block; padding: 12px 16px; }
+    footer { flex-direction: column; gap: 20px; padding: 40px 24px; }
+    .competencies-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 500px) {
+    nav { padding: 16px 20px; }
+    #hero, .section-wrap { padding-left: 20px; padding-right: 20px; padding-top: 100px; }
+    .ornament, .stats-row { margin-left: 20px; margin-right: 20px; }
+
+    /* Stats: stack vertically in 2 columns */
+    .stats-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    .stat-box {
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      padding: 24px 20px;
+    }
+    .stat-box:nth-child(odd) { border-right: 1px solid var(--border); }
+    .stat-box:last-child, .stat-box:nth-last-child(2):nth-child(odd) {
+      border-bottom: none;
+    }
+    .stat-number { font-size: 2.2rem; }
+
+    /* Competencies: single column */
+    .competencies-grid { grid-template-columns: 1fr; }
+    .comp-item { padding: 20px; }
+
+    .section-header { margin-bottom: 40px; }
+    .section-num { font-size: 2.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+<div class="shimmer-line"></div>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<nav>
+  <a href="#hero" class="nav-logo">JESEENA PARVEEN K ◆ <em> Portfolio </em> </a> 
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#certs">Credentials</a></li>
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="https://www.linkedin.com/in/jeseena-parveen-k/" target="_blank">LinkedIn ↗</a></li>
+  </ul>
+  <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- Mobile menu overlay -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#about" class="mobile-link">About</a>
+  <a href="#certs" class="mobile-link">Credentials</a>
+  <a href="#projects" class="mobile-link">Projects</a>
+  <a href="https://www.linkedin.com/in/jeseena-parveen-k/" target="_blank" class="mobile-link">LinkedIn ↗</a>
+</div>
+
+<main>
+<!-- HERO -->
+<section id="hero">
+  <div class="avail-pill">
+    <span class="pulse-dot"></span>
+    Open to Remote Opportunities
+  </div>
+  <div class="hero-eyebrow">
+   <!-- <span class="eyebrow-text">Data Analyst · SQL · Python · Power BI</span> -->
+  </div>
+  <h1 class="hero-name">
+    <span class="line1">Jeseena</span>
+    <span class="line2">Parveen. K</span>
+  </h1>
+
+      <p class="hero-title">Data Analyst &nbsp;·&nbsp; Power BI &nbsp;·&nbsp; SQL &nbsp;·&nbsp; Python</p>
+  <p class="hero-desc">
+    Transforming raw data into clear, actionable business insights. Specialist in interactive dashboards, KPI tracking, and communicating complex findings to both technical and non-technical stakeholders.
+  </p>
+  <div class="hero-actions">
+    <a href="#projects" class="btn-gold">View Projects</a>
+    <a href="https://www.linkedin.com/in/jeseena-parveen-k/" target="_blank" class="btn-ghost">LinkedIn Profile</a>
+  </div>
+</section>
+
+<div class="ornament">
+  <span class="ornament-line"></span>
+  <span class="ornament-diamond"></span>
+  <span class="ornament-line"></span>
+</div>
+
+<!-- STATS -->
+<div class="stats-row">
+  <div class="stat-box">
+    <div class="stat-number">1+</div>
+    <div class="stat-label">Years Professional Experience</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-number">6</div>
+    <div class="stat-label">Analytics Projects</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-number">2</div>
+    <div class="stat-label">Industry Certifications</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-number">100%</div>
+    <div class="stat-label">Remote Ready</div>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section id="about" class="section-wrap">
+  <div class="section-header reveal">
+    <div class="section-num">01</div>
+    <div class="section-title-group">
+      <div class="section-eyebrow">About</div>
+      <h2 class="section-title">Data-driven.<br><em>People-focused.</em></h2>
+    </div>
+  </div>
+  <div class="about-grid reveal">
+    <div class="about-text">
+
+   <p>
+        I am a <strong> PL-300 certified Power BI professional</strong> specializing in transforming complex datasets into clear, actionable business insights. 
+        I deliver end-to-end analytics solutions from raw data wrangling to interactive executive dashboards focusing on 
+        <span class="highlight">intuitive, business-oriented reports</span> that help stakeholders make informed decisions.
+    </p>
+
+    <p>
+        With <strong>9+ years of volunteer leadership and instructional experience</strong>, I bring 
+        <span class="highlight">structured thinking, strong communication, and stakeholder-focused problem solving</span> to analytics projects. 
+        I am actively seeking <span class="highlight">remote opportunities</span> to contribute to reporting and analytics initiatives while continuing to grow my technical skills.
+    </p>
+
+<p>
+  <em>Good data tells you what happened. Great analytics tells you what to do next!</em>
+</p>
+
+</div>
+    <div>
+      <div class="section-eyebrow" style="margin-bottom:20px;">Tech Stack</div>
+      <div class="skills-list">
+        <div class="skill-row"><span class="skill-name">Power BI</span><span class="skill-cat">Visualization</span></div>
+        <div class="skill-row"><span class="skill-name">SQL / PostgreSQL</span><span class="skill-cat">Database</span></div>
+        <div class="skill-row"><span class="skill-name">Python</span><span class="skill-cat">Analysis</span></div>
+        <div class="skill-row"><span class="skill-name">Pandas · Matplotlib · Seaborn</span><span class="skill-cat">Python libs</span></div>
+        <div class="skill-row"><span class="skill-name">DAX</span><span class="skill-cat">Power BI</span></div>
+        <div class="skill-row"><span class="skill-name">Power Query / ETL</span><span class="skill-cat">Transform</span></div>
+        <div class="skill-row"><span class="skill-name">Excel</span><span class="skill-cat">Reporting</span></div>
+        <div class="skill-row"><span class="skill-name">Data Storytelling</span><span class="skill-cat">Communication</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SQL PROFILE -->
+<section class="section-wrap" style="padding-top:0">
+  <div class="section-header reveal">
+    <div class="section-num">02</div>
+    <div class="section-title-group">
+      <div class="section-eyebrow">Profile</div>
+      <h2 class="section-title">In a query,<br><em>simply put.</em></h2>
+    </div>
+  </div>
+  <div class="reveal">
+    <div class="sql-block">
+      <div style="padding-top:12px">
+        <span class="sql-comment">-- Query the analyst</span><br>
+        <span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> analyst<br>
+        <span class="sql-keyword">WHERE</span> name = <span class="sql-string">'Jeseena Parveen'</span>;<br>
+        <br>
+        <span class="sql-key">name</span> <span style="color:var(--border)">│</span> <span class="sql-val">Jeseena Parveen</span><br>
+        <span class="sql-key">title</span> <span style="color:var(--border)">│</span> <span class="sql-val">Data Analyst</span><br>
+        <span class="sql-key">expertise</span> <span style="color:var(--border)">│</span> <span class="sql-val">Power BI, SQL, Python</span><br>
+        <span class="sql-key">experience</span> <span style="color:var(--border)">│</span> <span class="sql-val">1+ years</span><br>
+        <span class="sql-key">certified</span> <span style="color:var(--border)">│</span> <span class="sql-val">IBM · Microsoft PL-300</span><br>
+        <span class="sql-key">status</span> <span style="color:var(--border)">│</span> <span class="sql-status">open to remote</span><br>
+        <br>
+        <span class="sql-comment">-- 1 row returned</span> <span class="sql-cursor"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CORE COMPETENCIES -->
+<section class="section-wrap" style="padding-top:0">
+  <div class="section-header reveal">
+    <div class="section-num">03</div>
+    <div class="section-title-group">
+      <div class="section-eyebrow">Expertise</div>
+      <h2 class="section-title">Core<br><em>Competencies.</em></h2>
+    </div>
+  </div>
+  <div class="competencies-grid reveal">
+    <div class="comp-item"><div class="comp-num">01.</div><div class="comp-title">Data cleaning, validation & analysis</div></div>
+    <div class="comp-item"><div class="comp-num">02.</div><div class="comp-title">Interactive dashboards & reporting</div></div>
+    <div class="comp-item"><div class="comp-num">03.</div><div class="comp-title">KPI tracking & business metrics</div></div>
+    <div class="comp-item"><div class="comp-num">04.</div><div class="comp-title">Trend analysis & process improvement</div></div>
+    <div class="comp-item"><div class="comp-num">05.</div><div class="comp-title">Stakeholder communication</div></div>
+    <div class="comp-item"><div class="comp-num">06.</div><div class="comp-title">Storytelling through data visuals</div></div>
+    <div class="comp-item"><div class="comp-num">07.</div><div class="comp-title">Star schema & data modelling</div></div>
+    <div class="comp-item"><div class="comp-num">08.</div><div class="comp-title">ETL & Power Query transformations</div></div>
+  </div>
+</section>
+
+<!-- CERTS -->
+<section id="certs" class="section-wrap" style="padding-top:0">
+  <div class="section-header reveal">
+      <div class="section-num">04</div>
+      <div class="section-title-group">
+        <div class="section-eyebrow">Credentials</div>
+      <h2 class="section-title">Certified &<br><em>Credentialed.</em></h2>
+    </div>
+  </div>
+  <div class="certs-grid reveal">
+    <div class="cert-card">
+      <div class="cert-icon">MS</div>
+<div class="cert-issuer">
+  <a href="https://learn.microsoft.com/en-us/users/jeseenak-9349/credentials/b4f76c4a80d38fec?ref=https%3A%2F%2Fwww.linkedin.com%2F" 
+     target="_blank" 
+     rel="noopener"
+     class="gold-link">
+     Microsoft
+  </a>
+</div>
+
+      <div class="cert-name">Power BI Data Analyst Certificate</div>
+    </div>
+    <div class="cert-card">
+      <div class="cert-icon">IBM</div>
+<div class="cert-issuer">
+  <a href="https://www.coursera.org/account/accomplishments/specialization/K5FM5PY91LXI" 
+     target="_blank" 
+     rel="noopener"
+     class="gold-link">
+     Coursera
+  </a>
+</div>
+      <div class="cert-name">Data Analyst Professional Certificate</div>
+    </div>
+ 
+</section>
+
+<!-- PROJECTS --> 
+<section id="projects" class="section-wrap" style="padding-top:0">
+  <div class="section-header reveal">
+      <div class="section-num">05</div>
+      <div class="section-title-group">
+        <div class="section-eyebrow">Selected Work</div>
+        <h2 class="section-title">Projects that<br><em>deliver insight.</em></h2>
+      </div>
+  </div>
+
+  <div class="reveal">
+    <table class="projects-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Project</th>
+          <th>Stack</th>
+          <th>Link</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        <!-- 01 -->
+        <tr>
+          <td><span class="proj-num">01</span></td>
+          <td>
+            <div class="proj-title">Zesty Drinks Analysis</div>
+            <div class="proj-desc">
+              Snowflake + Power BI analysis of sales, customer behavior, product performance, inventory, and shipping operations. Delivered forecasting, loyalty optimization, and operational efficiency recommendations.
+            </div>
+          </td>
+          <td>
+            <div class="proj-tags">
+              <span class="tag">Snowflake</span>
+              <span class="tag">Power BI</span>
+              <span class="tag">Business Intelligence</span>
+            </div>
+          </td>
+          <td>
+            <a href="https://github.com/Jeseenacodes/Zesty_Drinks_Dashboard-PBI" target="_blank" class="proj-link">GitHub ↗</a>
+          </td>
+        </tr>
+
+        <!-- 02 -->
+        <tr>
+          <td><span class="proj-num">02</span></td>
+          <td>
+            <div class="proj-title">Healthcare Efficiency Analysis</div>
+            <div class="proj-desc">
+              Analyzed 26K+ hospital discharges across 151 New York facilities using DAX-driven Power BI dashboards. Identified cost drivers, length-of-stay patterns, and severity correlations impacting operational efficiency.
+            </div>
+          </td>
+          <td>
+            <div class="proj-tags">
+              <span class="tag">Power BI</span>
+              <span class="tag">DAX</span>
+              <span class="tag">Healthcare Analytics</span>
+            </div>
+          </td>
+          <td>
+            <a href="https://github.com/Jeseenacodes/Healthcare-Efficiency-Dashboard--PBI.git" target="_blank" class="proj-link">GitHub ↗</a>
+          </td>
+        </tr>
+
+        <!-- 03 -->
+        <tr>
+          <td><span class="proj-num">03</span></td>
+          <td>
+            <div class="proj-title">Healthcare Data Analysis</div>
+            <div class="proj-desc">
+              SQL investigation of 10+ years of hospital operations identifying revenue leakage, insurance coverage gaps, and 30-day readmission risks to support strategic healthcare decision-making.
+            </div>
+          </td>
+          <td>
+            <div class="proj-tags">
+              <span class="tag">SQL</span>
+              <span class="tag">Healthcare</span>
+              <span class="tag">Business Analysis</span>
+            </div>
+          </td>
+          <td>
+            <a href="https://github.com/Jeseenacodes/Hospital_analytics_SQL" target="_blank" class="proj-link">GitHub ↗</a>
+          </td>
+        </tr>
+
+        <!-- 04 -->
+        <tr>
+          <td><span class="proj-num">04</span></td>
+          <td>
+            <div class="proj-title">Customer Behavior Analysis</div>
+            <div class="proj-desc">
+              End-to-end analytics pipeline: cleaned 3,900+ transactions using Python (Pandas), performed PostgreSQL revenue & segmentation analysis, and built an interactive Power BI dashboard for business insights.
+            </div>
+          </td>
+          <td>
+            <div class="proj-tags">
+              <span class="tag">Python</span>
+              <span class="tag">PostgreSQL</span>
+              <span class="tag">Power BI</span>
+            </div>
+          </td>
+          <td>
+            <a href="https://github.com/Jeseenacodes/Customer_Behavior_Analytics-Python_SQL_PBI.git" target="_blank" class="proj-link">GitHub ↗</a>
+          </td>
+        </tr>
+
+        <!-- 05 -->
+        <tr>
+          <td><span class="proj-num">05</span></td>
+          <td>
+            <div class="proj-title">Motor Vehicle Theft Analysis</div>
+            <div class="proj-desc">
+              SQL & Python analysis of New Zealand vehicle theft trends. Explored year-over-year growth, regional density, seasonality patterns, and vehicle-type risk factors for public safety insights.
+            </div>
+          </td>
+          <td>
+            <div class="proj-tags">
+              <span class="tag">SQL</span>
+              <span class="tag">Python</span>
+              <span class="tag">Trend Analysis</span>
+            </div>
+          </td>
+          <td>
+            <a href="https://github.com/Jeseenacodes/Motor_Vehicle_Thefts-SQL_Python.git" target="_blank" class="proj-link">GitHub ↗</a>
+          </td>
+        </tr>
+
+        <!-- 06 -->
+        <tr>
+          <td><span class="proj-num">06</span></td>
+          <td>
+            <div class="proj-title">Restaurant Order Analysis</div>
+            <div class="proj-desc">
+              SQL-driven revenue and order pattern analysis identifying top-selling dishes, cuisine performance, pricing strategy, and upselling opportunities to improve profitability.
+            </div>
+          </td>
+          <td>
+            <div class="proj-tags">
+              <span class="tag">SQL</span>
+              <span class="tag">Revenue Analysis</span>
+              <span class="tag">Business Insights</span>
+            </div>
+          </td>
+          <td>
+            <a href="https://github.com/Jeseenacodes/Restaurant_Orders_SQL.git" target="_blank" class="proj-link">GitHub ↗</a>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Jeseena Parveen K </div>
+  <div class="footer-links">
+    <a href="https://www.linkedin.com/in/jeseena-parveen-k/" target="_blank">LinkedIn</a>
+    <a href="https://github.com/Jeseenacodes" target="_blank">GitHub</a>
+  </div>
+  <div class="footer-copy">© 2025 · Data Analyst · Remote</div>
+</footer>
+
+<script>
+  // Hamburger menu
+  const navToggle = document.getElementById('navToggle');
+  const mobileMenu = document.getElementById('mobileMenu');
+
+  navToggle.addEventListener('click', () => {
+    navToggle.classList.toggle('open');
+    mobileMenu.classList.toggle('open');
+    document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+  });
+
+  document.querySelectorAll('.mobile-link').forEach(link => {
+    link.addEventListener('click', () => {
+      navToggle.classList.remove('open');
+      mobileMenu.classList.remove('open');
+      document.body.style.overflow = '';
+    });
+  });
+
+  // Starfield
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  for (let i = 0; i < 120; i++) {
+    stars.push({
+      x: Math.random(), y: Math.random(),
+      r: Math.random() * 1.2,
+      o: Math.random() * 0.6 + 0.1,
+      speed: Math.random() * 0.0002 + 0.00005
+    });
+  }
+
+  function drawStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      s.o += Math.sin(Date.now() * s.speed) * 0.005;
+      ctx.beginPath();
+      ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(201,168,76,${Math.max(0.05, s.o)})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(drawStars);
+  }
+  drawStars();
+
+  // Cursor
+  const cur = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cur.style.left = mx + 'px'; cur.style.top = my + 'px';
+  });
+
+  (function animateRing() {
+    rx += (mx - rx) * 0.1; ry += (my - ry) * 0.1;
+    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+    requestAnimationFrame(animateRing);
+  })();
+
+  document.querySelectorAll('a, .cert-card, .stat-box, .skill-row, tr').forEach(el => {
+    el.addEventListener('mouseenter', () => { cur.classList.add('hovered'); ring.classList.add('hovered'); });
+    el.addEventListener('mouseleave', () => { cur.classList.remove('hovered'); ring.classList.remove('hovered'); });
+  });
+
+  // Scroll reveal
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(r => obs.observe(r));
+</script>
+</body>
+</html>
